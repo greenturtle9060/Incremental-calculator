@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Idle Game Suffix & Scientific Notation Calculator</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card-bg: #161920;
+      --border: #282c37;
+      --text: #e2e8f0;
+      --text-muted: #8b95a5;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --highlight-bg: rgba(56, 189, 248, 0.12);
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f1f5f9;
+        --card-bg: #ffffff;
+        --border: #cbd5e1;
+        --text: #0f172a;
+        --text-muted: #64748b;
+        --accent: #0284c7;
+        --accent-hover: #0369a1;
+        --highlight-bg: rgba(2, 132, 199, 0.08);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 20px 12px;
+      line-height: 1.4;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    p.subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input[type="text"], select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .option-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    select {
+      font-size: 0.8rem;
+      font-family: inherit;
+      padding: 6px 8px;
+    }
+
+    .output-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .output-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+
+    .output-value {
+      font-family: var(--font-mono);
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--accent);
+      word-break: break-all;
+    }
+
+    .breakdown {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-family: var(--font-mono);
+    }
+
+    .section-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    tbody tr {
+      cursor: pointer;
+      transition: background-color 0.12s;
+    }
+
+    tbody tr:hover {
+      background-color: var(--highlight-bg);
+    }
+
+    td.mono {
+      font-family: var(--font-mono);
+    }
+
+    tr.current-rank {
+      background-color: var(--highlight-bg);
+      font-weight: 700;
+    }
+
+    tr.current-rank td {
+      color: var(--accent);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
+    .error-msg {
+      color: #ef4444;
+      font-size: 0.8rem;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Idle Game Suffix Converter</h1>
+      <p class="subtitle">Supports Uppercase (UVO), Lowercase (uvo), Spaces (U V O), & Exponents</p>
+    </header>
+
+    <!-- Main Converter Card -->
+    <div class="card">
+      <div class="input-group">
+        <label for="main-input">Input Suffix, Number, or Exponent</label>
+        <input type="text" id="main-input" value="1.00 UVO" placeholder="e.g., 1.00 UVO, u-v-o, 1.00qqO, 2466, 1e2466" autocomplete="off" spellcheck="false">
+        <div id="error-msg" class="error-msg">Format not recognized. Try '1.00 UVO', '1.00 uVo', or an exponent like '2466'.</div>
+        <div class="hint">Click any row in the "What Comes Next?" table below to auto-load it here!</div>
+      </div>
+
+      <div class="options-grid">
+        <div class="option-item">
+          <label for="case-style">Display Case Style</label>
+          <select id="case-style">
+            <option value="upper" selected>UPPERCASE (UVO, DVO)</option>
+            <option value="mixed">Mixed Case (uVo, dVo)</option>
+            <option value="lower">lowercase (uvo, dvo)</option>
+          </select>
+        </div>
+
+        <div class="option-item">
+          <label for="component-order">Prefix Order Rule</label>
+          <select id="component-order">
+            <option value="OTH" selected>Ones-Tens-Hundreds (U-V-O)</option>
+            <option value="HTO">Hundreds-Tens-Ones (O-V-U)</option>
+          </select>
+        </div>
+
+        <div class="option-item">
+          <label for="precision-select">Decimal Precision</label>
+          <select id="precision-select">
+            <option value="2">2 decimals (#.##e#)</option>
+            <option value="3" selected>3 decimals (#.###e#)</option>
+            <option value="4">4 decimals (#.####e#)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Scientific / Exponential Notation</div>
+        <div id="output-val" class="output-value">1.000e02466</div>
+        <div id="breakdown-val" class="breakdown">Parsed: U [1] + V [20] + O [800] = Rank 821 -> Exponent 2466</div>
+      </div>
+    </div>
+
+    <!-- What Comes Next Roadmap Card -->
+    <div class="card">
+      <div class="section-title">
+        <span>"What Comes Next?" Roadmap</span>
+        <span id="roadmap-range" style="font-size: 0.72rem; color: var(--text-muted); font-weight: normal;">Next 15 Tiers</span>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Suffix</th>
+              <th>Scientific Notation</th>
+              <th>Multiplier</th>
+            </tr>
+          </thead>
+          <tbody id="roadmap-body">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       PREFIX DICTIONARIES & PARSING DATA
+       ========================================================================== */
+
+    const SHORT_BASE_SUFFIXES = [
+      { rank: 0, upper: "", mixed: "", lower: "", name: "Units", exp: 0 },
+      { rank: 1, upper: "K", mixed: "K", lower: "k", name: "Thousand", exp: 3 },
+      { rank: 2, upper: "M", mixed: "M", lower: "m", name: "Million", exp: 6 },
+      { rank: 3, upper: "B", mixed: "B", lower: "b", name: "Billion", exp: 9 },
+      { rank: 4, upper: "T", mixed: "T", lower: "t", name: "Trillion", exp: 12 },
+      { rank: 5, upper: "QA", mixed: "Qa", lower: "qa", name: "Quadrillion", exp: 15 },
+      { rank: 6, upper: "QI", mixed: "Qi", lower: "qi", name: "Quintillion", exp: 18 },
+      { rank: 7, upper: "SX", mixed: "Sx", lower: "sx", name: "Sextillion", exp: 21 },
+      { rank: 8, upper: "SP", mixed: "Sp", lower: "sp", name: "Septillion", exp: 24 },
+      { rank: 9, upper: "OC", mixed: "Oc", lower: "oc", name: "Octillion", exp: 27 },
+      { rank: 10, upper: "NO", mixed: "No", lower: "no", name: "Nonillion", exp: 30 },
+      { rank: 11, upper: "DC", mixed: "Dc", lower: "dc", name: "Decillion", exp: 33 }
+    ];
+
+    const ONES = [
+      { val: 1, upper: "U", mixed: "u", lower: "u", tokens: ["un", "u"], name: "Un" },
+      { val: 2, upper: "D", mixed: "d", lower: "d", tokens: ["duo", "d"], name: "Duo" },
+      { val: 3, upper: "T", mixed: "t", lower: "t", tokens: ["tre", "tres", "t"], name: "Tre" },
+      { val: 4, upper: "QA", mixed: "Qa", lower: "qa", tokens: ["quattuor", "quad", "qa", "q"], name: "Quattuor" },
+      { val: 5, upper: "QI", mixed: "Qi", lower: "qi", tokens: ["quinque", "quin", "qi"], name: "Quinque" },
+      { val: 6, upper: "SX", mixed: "Sx", lower: "sx", tokens: ["sex", "sx", "s"], name: "Sex" },
+      { val: 7, upper: "SP", mixed: "Sp", lower: "sp", tokens: ["septen", "septem", "sept", "sp"], name: "Septen" },
+      { val: 8, upper: "OC", mixed: "Oc", lower: "oc", tokens: ["octo", "oc", "o"], name: "Octo" },
+      { val: 9, upper: "N", mixed: "N", lower: "n", tokens: ["novem", "nov", "no", "n"], name: "Novem" }
+    ];
+
+    const TENS = [
+      { val: 10, upper: "D", mixed: "Dec", lower: "dec", tokens: ["deci", "dec", "dc"], name: "Deci" },
+      { val: 20, upper: "V", mixed: "V", lower: "v", tokens: ["viginti", "vig", "v"], name: "Viginti" },
+      { val: 30, upper: "TG", mixed: "Tg", lower: "tg", tokens: ["triginta", "trig", "tg", "tr"], name: "Triginta" },
+      { val: 40, upper: "QG", mixed: "Qg", lower: "qg", tokens: ["quadraginta", "quad", "qg"], name: "Quadraginta" },
+      { val: 50, upper: "QQ", mixed: "Qq", lower: "qq", tokens: ["quinquaginta", "quin", "qq"], name: "Quinquaginta" },
+      { val: 60, upper: "SX", mixed: "Sx", lower: "sx", tokens: ["sexaginta", "sx"], name: "Sexaginta" },
+      { val: 70, upper: "SP", mixed: "Sp", lower: "sp", tokens: ["septuaginta", "sp"], name: "Septuaginta" },
+      { val: 80, upper: "OG", mixed: "Og", lower: "og", tokens: ["octoginta", "oct", "og"], name: "Octoginta" },
+      { val: 90, upper: "NG", mixed: "Ng", lower: "ng", tokens: ["nonaginta", "non", "ng"], name: "Nonaginta" }
+    ];
+
+    const HUNDREDS = [
+      { val: 100, upper: "C", mixed: "C", lower: "c", tokens: ["centi", "cent", "c"], name: "Centi" },
+      { val: 200, upper: "D", mixed: "D", lower: "d", tokens: ["ducenti", "duc", "dc"], name: "Ducenti" },
+      { val: 300, upper: "T", mixed: "T", lower: "t", tokens: ["trecenti", "trec", "tc"], name: "Trecenti" },
+      { val: 400, upper: "Q", mixed: "Q", lower: "q", tokens: ["quadringenti", "quad", "qc"], name: "Quadringenti" },
+      { val: 500, upper: "QN", mixed: "Qn", lower: "qn", tokens: ["quingenti", "quing", "qn"], name: "Quingenti" },
+      { val: 600, upper: "S", mixed: "S", lower: "s", tokens: ["sescenti", "sesc", "sc"], name: "Sescenti" },
+      { val: 700, upper: "SP", mixed: "Sp", lower: "sp", tokens: ["septingenti", "sept", "spc"], name: "Septingenti" },
+      { val: 800, upper: "O", mixed: "O", lower: "o", tokens: ["octingenti", "oct", "o"], name: "Octingenti" },
+      { val: 900, upper: "N", mixed: "N", lower: "n", tokens: ["nongenti", "nong", "ng"], name: "Nongenti" }
+    ];
+
+    /* ==========================================================================
+       RANK TO SUFFIX FORMATTER
+       ========================================================================== */
+
+    function formatSuffixForRank(rank, caseStyle, orderRule) {
+      if (rank < SHORT_BASE_SUFFIXES.length) {
+        const item = SHORT_BASE_SUFFIXES[rank];
+        if (caseStyle === "upper") return item.upper;
+        if (caseStyle === "lower") return item.lower;
+        return item.mixed;
+      }
+
+      const onesVal = rank % 10;
+      const tensVal = Math.floor((rank % 100) / 10) * 10;
+      const hundredsVal = Math.floor((rank % 1000) / 100) * 100;
+
+      const oObj = ONES.find(x => x.val === onesVal);
+      const tObj = TENS.find(x => x.val === tensVal);
+      const hObj = HUNDREDS.find(x => x.val === hundredsVal);
+
+      const getPart = (obj) => {
+        if (!obj) return "";
+        if (caseStyle === "upper") return obj.upper;
+        if (caseStyle === "lower") return obj.lower;
+        return obj.mixed;
+      };
+
+      const oPart = getPart(oObj);
+      const tPart = getPart(tObj);
+      const hPart = getPart(hObj);
+
+      if (orderRule === "HTO") {
+        return hPart + tPart + oPart;
+      } else {
+        return oPart + tPart + hPart;
+      }
+    }
+
+    /* ==========================================================================
+       PARSER ENGINE
+       ========================================================================== */
+
+    function parseInput(rawInput, orderRule) {
+      const input = rawInput.trim();
+      if (!input) return null;
+
+      // 1. Raw Integer / Exponent Input
+      if (/^e?\+?\d+$/i.test(input)) {
+        const exp = BigInt(input.replace(/[^0-9]/g, ''));
+        const rank = exp >= 3n ? (exp - 3n) / 3n : 0n;
+        return {
+          mantissa: 1.0,
+          exponent: exp,
+          rank,
+          breakdownStr: `Direct Exponent: e${exp} -> Rank ${rank}`
+        };
+      }
+
+      // 2. Scientific Notation Input
+      const sciMatch = input.match(/^([+-]?\d*(?:\.\d+)?)\s*e\+?(\d+)$/i);
+      if (sciMatch) {
+        const mantissa = parseFloat(sciMatch[1] || "1");
+        const exp = BigInt(sciMatch[2]);
+        const rank = exp >= 3n ? (exp - 3n) / 3n : 0n;
+        return {
+          mantissa,
+          exponent: exp,
+          rank,
+          breakdownStr: `Scientific Notation: ${mantissa}e${exp} -> Rank ${rank}`
+        };
+      }
+
+      // 3. Number + Suffix Pattern
+      let mantissa = 1.0;
+      let suffixStr = input;
+
+      const numAndTextMatch = input.match(/^([+-]?\d*(?:\.\d+)?)\s*(.+)$/);
+      if (numAndTextMatch && numAndTextMatch[1]) {
+        mantissa = parseFloat(numAndTextMatch[1]);
+        suffixStr = numAndTextMatch[2];
+      }
+
+      const cleanSuffix = suffixStr.replace(/[\s\-_.]/g, '').toLowerCase();
+      if (!cleanSuffix) return null;
+
+      // Check standard short base suffixes
+      const shortMatch = SHORT_BASE_SUFFIXES.find(s => s.upper.toLowerCase() === cleanSuffix || s.lower === cleanSuffix || s.mixed.toLowerCase() === cleanSuffix);
+      if (shortMatch) {
+        const rank = BigInt(shortMatch.rank);
+        const exponent = BigInt(shortMatch.exp);
+        return {
+          mantissa,
+          exponent,
+          rank,
+          breakdownStr: `Base Suffix: ${shortMatch.name} -> Rank ${rank} -> Exponent e${exponent}`
+        };
+      }
+
+      // Parse Compound Latin Suffix
+      const compoundResult = parseCompoundLatin(cleanSuffix, orderRule);
+      if (compoundResult) {
+        const rank = BigInt(compoundResult.rank);
+        const exponent = (rank * 3n) + 3n;
+        return {
+          mantissa,
+          exponent,
+          rank,
+          breakdownStr: compoundResult.breakdown + ` = Rank ${rank} -> Exponent e${exponent}`
+        };
+      }
+
+      return null;
+    }
+
+    function parseCompoundLatin(cleanStr, orderRule) {
+      let onesVal = 0, tensVal = 0, hundredsVal = 0;
+      let oName = "", tName = "", hName = "";
+
+      let str = cleanStr;
+
+      if (orderRule === "HTO") {
+        const hMatch = HUNDREDS.find(h => h.tokens.some(t => str.startsWith(t)));
+        if (hMatch) {
+          hundredsVal = hMatch.val;
+          hName = `${hMatch.upper} [${hMatch.val}]`;
+          const token = hMatch.tokens.find(t => str.startsWith(t));
+          str = str.slice(token.length);
+        }
+        const tMatch = TENS.find(t => t.tokens.some(tok => str.startsWith(tok)));
+        if (tMatch) {
+          tensVal = tMatch.val;
+          tName = `${tMatch.upper} [${tMatch.val}]`;
+          const token = tMatch.tokens.find(tok => str.startsWith(tok));
+          str = str.slice(token.length);
+        }
+        const oMatch = ONES.find(o => o.tokens.some(tok => str === tok || str.startsWith(tok)));
+        if (oMatch) {
+          onesVal = oMatch.val;
+          oName = `${oMatch.upper} [${oMatch.val}]`;
+        }
+      } else {
+        // Ones-Tens-Hundreds (OTH)
+        const hMatch = HUNDREDS.find(h => h.tokens.some(t => str.endsWith(t)));
+        if (hMatch) {
+          hundredsVal = hMatch.val;
+          hName = `${hMatch.upper} [${hMatch.val}]`;
+          const token = hMatch.tokens.find(t => str.endsWith(t));
+          str = str.slice(0, -token.length);
+        }
+
+        const tMatch = TENS.find(t => t.tokens.some(tok => str.endsWith(tok) || str.includes(tok)));
+        if (tMatch) {
+          tensVal = tMatch.val;
+          tName = `${tMatch.upper} [${tMatch.val}]`;
+          const token = tMatch.tokens.find(tok => str.endsWith(tok) || str.includes(tok));
+          str = str.replace(token, '');
+        }
+
+        if (str.length > 0) {
+          const oMatch = ONES.find(o => o.tokens.some(tok => str.includes(tok)));
+          if (oMatch) {
+            onesVal = oMatch.val;
+            oName = `${oMatch.upper} [${oMatch.val}]`;
+          }
+        }
+      }
+
+      const totalRank = onesVal + tensVal + hundredsVal;
+      if (totalRank === 0) return null;
+
+      const parts = [oName, tName, hName].filter(Boolean);
+      return {
+        rank: totalRank,
+        breakdown: "Parsed: " + parts.join(" + ")
+      };
+    }
+
+    /* ==========================================================================
+       UI CONTROLLER & EVENT HANDLING
+       ========================================================================== */
+
+    const inputEl = document.getElementById('main-input');
+    const caseStyleEl = document.getElementById('case-style');
+    const orderRuleEl = document.getElementById('component-order');
+    const precisionEl = document.getElementById('precision-select');
+
+    const outputValEl = document.getElementById('output-val');
+    const breakdownValEl = document.getElementById('breakdown-val');
+    const errorMsgEl = document.getElementById('error-msg');
+    const roadmapBodyEl = document.getElementById('roadmap-body');
+
+    function update() {
+      const rawInput = inputEl.value;
+      const caseStyle = caseStyleEl.value;
+      const orderRule = orderRuleEl.value;
+      const precision = parseInt(precisionEl.value, 10);
+
+      const parsed = parseInput(rawInput, orderRule);
+
+      if (!parsed) {
+        errorMsgEl.style.display = 'block';
+        outputValEl.innerText = "---";
+        breakdownValEl.innerText = "Could not parse suffix or exponent";
+        renderRoadmap(821n, caseStyle, orderRule, precision);
+        return;
+      }
+
+      errorMsgEl.style.display = 'none';
+
+      // Format E-Notation (#.###e######)
+      const formattedMantissa = parsed.mantissa.toFixed(precision);
+      const formattedExp = parsed.exponent.toString().padStart(5, '0');
+      outputValEl.innerText = `${formattedMantissa}e${formattedExp}`;
+
+      // Display breakdown text
+      breakdownValEl.innerText = parsed.breakdownStr;
+
+      // Render Roadmap Table starting at current rank
+      renderRoadmap(parsed.rank, caseStyle, orderRule, precision, parsed.mantissa);
+    }
+
+    function renderRoadmap(currentRank, caseStyle, orderRule, precision, baseMantissa = 1.0) {
+      roadmapBodyEl.innerHTML = '';
+      const startRank = currentRank < 0n ? 0n : currentRank;
+
+      for (let i = 0n; i < 15n; i++) {
+        const rank = startRank + i;
+        const exp = (rank * 3n) + 3n;
+        const suffix = formatSuffixForRank(Number(rank), caseStyle, orderRule);
+
+        const isCurrent = (rank === currentRank);
+        const tr = document.createElement('tr');
+        if (isCurrent) tr.className = 'current-rank';
+
+        const expStr = exp.toString().padStart(5, '0');
+        const sciFormatted = `${baseMantissa.toFixed(precision)}e${expStr}`;
+        const multiplierStr = i === 0n ? "Base" : `x1,000^${i}`;
+
+        tr.innerHTML = `
+          <td class="mono">${rank}</td>
+          <td class="mono"><strong>${suffix || "---"}</strong>${isCurrent ? '<span class="badge">CURRENT</span>' : ''}</td>
+          <td class="mono">${sciFormatted}</td>
+          <td style="color: var(--text-muted); font-size: 0.75rem;">${multiplierStr}</td>
+        `;
+
+        // Click row to auto-load into calculator!
+        tr.addEventListener('click', () => {
+          inputEl.value = `1.00 ${suffix}`;
+          update();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        roadmapBodyEl.appendChild(tr);
+      }
+    }
+
+    // Event Listeners
+    inputEl.addEventListener('input', update);
+    caseStyleEl.addEventListener('change', update);
+    orderRuleEl.addEventListener('change', update);
+    precisionEl.addEventListener('change', update);
+
+    // Initial render
+    update();
+  </script>
+</body>
+</html>
